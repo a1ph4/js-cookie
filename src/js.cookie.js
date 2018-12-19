@@ -5,30 +5,13 @@
  * Copyright 2006, 2015 Klaus Hartl & Fagner Brack
  * Released under the MIT license
  */
-;(function (factory) {
-	var registeredInModuleLoader;
-	if (typeof define === 'function' && define.amd) {
-		define(factory);
-		registeredInModuleLoader = true;
-	}
-	if (typeof exports === 'object') {
-		module.exports = factory();
-		registeredInModuleLoader = true;
-	}
-	if (!registeredInModuleLoader) {
-		var OldCookies = window.Cookies;
-		var api = window.Cookies = factory();
-		api.noConflict = function () {
-			window.Cookies = OldCookies;
-			return api;
-		};
-	}
-}(function () {
-	function extend () {
+
+function factory() {
+	function extend() {
 		var i = 0;
 		var result = {};
 		for (; i < arguments.length; i++) {
-			var attributes = arguments[ i ];
+			var attributes = arguments[i];
 			for (var key in attributes) {
 				result[key] = attributes[key];
 			}
@@ -36,28 +19,36 @@
 		return result;
 	}
 
-	function decode (s) {
+	function decode(s) {
 		return s.replace(/(%[0-9A-Z]{2})+/g, decodeURIComponent);
 	}
 
-	function init (converter) {
+	function init(converter) {
 		function api() {}
 
-		function set (key, value, attributes) {
+		function set(key, value, attributes) {
 			if (typeof document === 'undefined') {
 				return;
 			}
 
-			attributes = extend({
-				path: '/'
-			}, api.defaults, attributes);
+			attributes = extend(
+				{
+					path: '/'
+				},
+        api.defaults,
+        attributes
+      );
 
 			if (typeof attributes.expires === 'number') {
-				attributes.expires = new Date(new Date() * 1 + attributes.expires * 864e+5);
+				attributes.expires = new Date(
+          new Date() * 1 + attributes.expires * 864e5
+        );
 			}
 
-			// We're using "expires" because "max-age" is not supported by IE
-			attributes.expires = attributes.expires ? attributes.expires.toUTCString() : '';
+      // We're using "expires" because "max-age" is not supported by IE
+			attributes.expires = attributes.expires
+        ? attributes.expires.toUTCString()
+        : '';
 
 			try {
 				var result = JSON.stringify(value);
@@ -66,14 +57,16 @@
 				}
 			} catch (e) {}
 
-			value = converter.write ?
-				converter.write(value, key) :
-				encodeURIComponent(String(value))
-					.replace(/%(23|24|26|2B|3A|3C|3E|3D|2F|3F|40|5B|5D|5E|60|7B|7D|7C)/g, decodeURIComponent);
+			value = converter.write
+        ? converter.write(value, key)
+        : encodeURIComponent(String(value)).replace(
+            /%(23|24|26|2B|3A|3C|3E|3D|2F|3F|40|5B|5D|5E|60|7B|7D|7C)/g,
+            decodeURIComponent
+          );
 
 			key = encodeURIComponent(String(key))
-				.replace(/%(23|24|26|2B|5E|60|7C)/g, decodeURIComponent)
-				.replace(/[\(\)]/g, escape);
+        .replace(/%(23|24|26|2B|5E|60|7C)/g, decodeURIComponent)
+        .replace(/[\(\)]/g, escape);
 
 			var stringifiedAttributes = '';
 			for (var attributeName in attributes) {
@@ -85,27 +78,27 @@
 					continue;
 				}
 
-				// Considers RFC 6265 section 5.2:
-				// ...
-				// 3.  If the remaining unparsed-attributes contains a %x3B (";")
-				//     character:
-				// Consume the characters of the unparsed-attributes up to,
-				// not including, the first %x3B (";") character.
-				// ...
+        // Considers RFC 6265 section 5.2:
+        // ...
+        // 3.  If the remaining unparsed-attributes contains a %x3B (";")
+        //     character:
+        // Consume the characters of the unparsed-attributes up to,
+        // not including, the first %x3B (";") character.
+        // ...
 				stringifiedAttributes += '=' + attributes[attributeName].split(';')[0];
 			}
 
 			return (document.cookie = key + '=' + value + stringifiedAttributes);
 		}
 
-		function get (key, json) {
+		function get(key, json) {
 			if (typeof document === 'undefined') {
 				return;
 			}
 
 			var jar = {};
-			// To prevent the for loop in the first place assign an empty array
-			// in case there are no cookies at all.
+      // To prevent the for loop in the first place assign an empty array
+      // in case there are no cookies at all.
 			var cookies = document.cookie ? document.cookie.split('; ') : [];
 			var i = 0;
 
@@ -119,8 +112,8 @@
 
 				try {
 					var name = decode(parts[0]);
-					cookie = (converter.read || converter)(cookie, name) ||
-						decode(cookie);
+					cookie =
+            (converter.read || converter)(cookie, name) || decode(cookie);
 
 					if (json) {
 						try {
@@ -140,16 +133,20 @@
 		}
 
 		api.set = set;
-		api.get = function (key) {
+		api.get = function(key) {
 			return get(key, false /* read as raw */);
 		};
-		api.getJSON = function (key) {
+		api.getJSON = function(key) {
 			return get(key, true /* read as json */);
 		};
-		api.remove = function (key, attributes) {
-			set(key, '', extend(attributes, {
-				expires: -1
-			}));
+		api.remove = function(key, attributes) {
+			set(
+        key,
+        '',
+        extend(attributes, {
+	expires: -1
+})
+      );
 		};
 
 		api.defaults = {};
@@ -159,5 +156,25 @@
 		return api;
 	}
 
-	return init(function () {});
-}));
+	return init(function() {});
+}
+
+(function(factory) {
+	var registeredInModuleLoader;
+	if (typeof define === 'function' && define.amd) {
+		define(factory);
+		registeredInModuleLoader = true;
+	}
+	if (typeof exports === 'object') {
+		module.exports = factory();
+		registeredInModuleLoader = true;
+	}
+	if (!registeredInModuleLoader) {
+		var OldCookies = window.Cookies;
+		var api = (window.Cookies = factory());
+		api.noConflict = function() {
+			window.Cookies = OldCookies;
+			return api;
+		};
+	}
+})(factory);

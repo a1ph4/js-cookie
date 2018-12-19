@@ -1,8 +1,7 @@
 /* eslint-env node */
 'use strict';
 
-module.exports = function (grunt) {
-
+module.exports = function(grunt) {
 	function encodingMiddleware(request, response, next) {
 		var url = require('url').parse(request.url, true, true);
 		var query = url.query;
@@ -17,10 +16,12 @@ module.exports = function (grunt) {
 		var cookieValue = query.value;
 
 		response.setHeader('content-type', 'application/json');
-		response.end(JSON.stringify({
-			name: cookieName,
-			value: cookieValue
-		}));
+		response.end(
+      JSON.stringify({
+	name: cookieName,
+	value: cookieValue
+})
+    );
 	}
 
 	grunt.initConfig({
@@ -35,7 +36,7 @@ module.exports = function (grunt) {
 						'http://127.0.0.1:9998/encoding.html?integration_baseurl=http://127.0.0.1:9998/'
 					]
 				}
-			},
+			}
 		},
 		nodeunit: {
 			all: 'test/node.js'
@@ -43,7 +44,10 @@ module.exports = function (grunt) {
 		eslint: {
 			grunt: 'Gruntfile.js',
 			source: 'src/**/*.js',
-			tests: ['test/**/*.js', '!test/polyfill.js']
+			tests: ['test/**/*.js', '!test/polyfill.js'],
+			options: {
+				fix: true
+			}
 		},
 		uglify: {
 			options: {
@@ -51,7 +55,8 @@ module.exports = function (grunt) {
 					unsafe: true
 				},
 				screwIE8: false,
-				banner: '/*! <%= pkg.name %> v<%= pkg.version %> | <%= pkg.license %> */\n'
+				banner:
+          '/*! <%= pkg.name %> v<%= pkg.version %> | <%= pkg.license %> */\n'
 			},
 			build: {
 				files: {
@@ -68,13 +73,10 @@ module.exports = function (grunt) {
 			tasks: 'default'
 		},
 		compare_size: {
-			files: [
-				'build/js.cookie-<%= pkg.version %>.min.js',
-				'src/js.cookie.js'
-			],
+			files: ['build/js.cookie-<%= pkg.version %>.min.js', 'src/js.cookie.js'],
 			options: {
 				compress: {
-					gz: function (fileContents) {
+					gz: function(fileContents) {
 						return require('gzip-js').zip(fileContents, {}).length;
 					}
 				}
@@ -85,7 +87,7 @@ module.exports = function (grunt) {
 				options: {
 					port: 9998,
 					base: ['.', 'test'],
-					middleware: function (connect, options, middlewares) {
+					middleware: function(connect, options, middlewares) {
 						middlewares.unshift(encodingMiddleware);
 						return middlewares;
 					}
@@ -104,7 +106,7 @@ module.exports = function (grunt) {
 					open: 'http://127.0.0.1:10000',
 					keepalive: true,
 					livereload: true,
-					middleware: function (connect, options, middlewares) {
+					middleware: function(connect, options, middlewares) {
 						middlewares.unshift(encodingMiddleware);
 						return middlewares;
 					}
@@ -181,7 +183,7 @@ module.exports = function (grunt) {
 		}
 	});
 
-	// Loading dependencies
+  // Loading dependencies
 	for (var key in grunt.file.readJSON('package.json').devDependencies) {
 		if (key !== 'grunt' && key.indexOf('grunt') === 0) {
 			grunt.loadNpmTasks(key);
@@ -189,7 +191,13 @@ module.exports = function (grunt) {
 	}
 
 	grunt.registerTask('saucelabs', ['connect:build-sauce', 'saucelabs-qunit']);
-	grunt.registerTask('test', ['uglify', 'eslint', 'connect:build-qunit', 'qunit', 'nodeunit']);
+	grunt.registerTask('test', [
+		'uglify',
+		'eslint',
+		'connect:build-qunit',
+		'qunit',
+		'nodeunit'
+	]);
 
 	grunt.registerTask('dev', ['test', 'compare_size']);
 	grunt.registerTask('ci', ['test', 'saucelabs']);
